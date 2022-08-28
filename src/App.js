@@ -10,7 +10,6 @@ class App extends Component {
 
   constructor() {
     super()
-
     this.state = {
       users: [{ name: "Amer" }, { name: "Natasha" }, { name: "Leen" }, { name: "Mohammad" }],
       movies: [
@@ -20,23 +19,52 @@ class App extends Component {
         { id: 3, isRented: false, title: "Joker", year: 2019, img: "https://i.pinimg.com/564x/e9/6f/7f/e96f7f3bddb137cf3d7afdc88cb1b68f.jpg", descrShort: "A mentally troubled standup comedian embarks on a downward spiral that leads to the creation of an iconic villain , He keeps blaming society for what he has become +ratio" },
         { id: 4, isRented: false, title: "Beauty and the Beast", year: 2016, img: "https://images-na.ssl-images-amazon.com/images/I/51ArFYSFGJL.jpg", descrShort: "Basically the same as the original, except now Hermi-- Emma Wattson plays Belle, fittingly so some would say, given how actively progressive she is regarding women's rights. Rumor has it that in the bonus scenes she whips out a wand and turns Gaston into a toad, but in order to watch those scenes you need to recite a certain incantation." }
       ],
-      budget: 10,
+      budget: 13,
+      searchMovieText : "",
+      filteredMovies: [],
     }
   }
 
   rented = (id) => {
     let tempMovies = [...this.state.movies]
+    let budget = this.state.budget
+
+    if(tempMovies.find(movie => movie.id == id).isRented) {
+      budget += 3
+    } else if(budget < 3 ){
+      alert('your budget is not enough')
+    } else {
+      budget -= 3
+    }
     const isMovieRented = tempMovies.find(movie => movie.id == id
     ).isRented
 
     tempMovies.find(movie => movie.id == id
     ).isRented = !isMovieRented
 
-    this.setState({ movies: tempMovies })
+    this.setState({ 
+      movies: tempMovies ,
+      budget : budget
+    })
+  }
+
+  filterMovies = (searchInput) => {
+    this.setState ({
+      searchMovieText : searchInput
+    }, () => {
+      const searchMovieText = this.state.searchMovieText
+      let movies = [...this.state.movies]
+      movies = movies.filter((movie) => {
+        return movie.title.toLowerCase().includes(searchMovieText);
+      })
+      this.setState({
+        filteredMovies: movies,
+      })
+    })
   }
 
   render = () => {
-    return (
+  return (
       <Router>
         <div className='app'>
 
@@ -46,9 +74,15 @@ class App extends Component {
             <span>REFLIX</span>
           </div>
           <Route exact path="/" render={() => <Landing users={this.state.users} />} />
-          <Route exact path='/movies/:id' render={({ match }) => < MovieDetail match={match} movies={this.state.movies} />} />
-          <Route exact path="/catalog" render={() => <Catalog budget={this.state.budget} movies={this.state.movies} rented={this.rented} />} />
-
+          <Route exact path="/catalog" render={() => 
+              <Catalog 
+                 budget={this.state.budget} 
+                 movies={this.state.searchMovieText === "" ? this.state.movies : this.state.filteredMovies} 
+                 rented={this.rented} 
+                 searchMovieText={this.state.searchMovieText}
+                 filterMovies={this.filterMovies}
+                 />} />
+          <Route exact path='/catalog/:id' render={({ match }) => < MovieDetail match={match} movies={this.state.movies} />} />
         </div>
       </Router>
     )
